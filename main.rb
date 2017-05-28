@@ -69,16 +69,18 @@ class DropOutputToxic < Toxic
 end
 
 class LatencyToxic < Toxic
-  def initialze(delay)
+  attr_reader :delay
+
+  def initialize(delay)
     @delay = delay
   end
 
   def enable!
-    `tc qdisc add latency lo root netem delay #{delay}ms`
+    `tc qdisc add dev lo root netem delay #{delay}ms`
   end
 
   def disable!
-    `tc qdisc del latency lo root netem`
+    `tc qdisc del dev lo root netem`
   end
 end
 
@@ -91,7 +93,7 @@ class ToxicTest < Test::Unit::TestCase
 
   protected
 
-  def can_connect_to_host?(timeout = 0.1)
+  def can_connect_to_host?(timeout = 0.2)
     start = Time.now
     http = Net::HTTP.new(@host, @port)
     http.open_timeout = timeout
@@ -114,7 +116,7 @@ class ToxicTest < Test::Unit::TestCase
   end
 end
 
-class DropOutputToxicTest < Test::Unit::TestCase
+class DropOutputToxicTest < ToxicTest
   def setup
     super
     @toxic = DropOutputToxic.new(@host, @port)
@@ -134,17 +136,18 @@ end
 class LatencyToxicTest < ToxicTest
   def setup
     super
-    @delay = 50
+    @delay = 100
     @toxic = LatencyToxic.new(@delay)
   end
 
   def test_toxic_adds_latency
     with_server do
-      p can_connect_to_host?
+      assert can_connect_to_host?
       with_toxic do
-        p can_connect_to_host?
+        ms = @delay / 1000.0
+        assert can_connect_to_host?(ms * 2.5) > ms
       end
-      p can_connect_to_host?
+      assert can_connect_to_host?
     end
   end
 end
