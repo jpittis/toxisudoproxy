@@ -39,6 +39,7 @@ class LatencyToxic < Toxic
     @delay = delay
   end
 
+  # This will cause latency 2 times the delay.
   def enable!
     `tc qdisc add dev lo root netem delay #{delay}ms`
   end

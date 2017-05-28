@@ -96,7 +96,7 @@ class LatencyToxicTest < ToxicTest
       assert can_connect_to_host?
       with_toxic do
         ms = @delay / 1000.0
-        assert can_connect_to_host?(ms * 2.5) > ms
+        assert can_connect_to_host?(ms * 2.5) > (ms * 2)
       end
       assert can_connect_to_host?
     end
